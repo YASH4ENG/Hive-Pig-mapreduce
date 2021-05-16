@@ -1,0 +1,50 @@
+NOTE: These command should be written in Hive Shell!!!!
+
+
+--create database in hive----
+create database ca1;
+ 
+-----use database--------
+use ca1;
+
+
+------create table and load hdfs data in hive------------
+
+NOTE: Here we Directly load data from HDFS to the HIVE TABLE!!
+
+create external table emp_records(
+Id int,
+PostTypeId int,
+AcceptedAnswerId int,
+ParentId int,
+CreationDate string,
+DeletionDate string,
+Score int,
+ViewCount int,
+Body string,
+OwnerUserId int,
+OwnerDisplayName string,
+LastEditorUserId int,
+LastEditorDisplayName string,
+LastEditDate string,
+LastActivityDate string,
+Title string,
+Tags string,
+AnswerCount int,
+CommentCount int,
+FavoriteCount int,
+ClosedDate string,
+CommunityOwnedDate string)
+row format delimited fields terminated by ','
+location '/user/cloudera/data/pigdata';
+
+-------QUERIES FOR TASKS:------
+
+1>The top 10 posts by score:
+SELECT title,score from emp_records order by score desc limit 10;
+
+2>The top 10 users by post score;
+SELECT * from (select owneruserid,sum(score) as scores from emp_records group by owneruserid)a order by scores desc limit 10;
+
+3>The number of distinct users, who used the word “Hadoop” in one of their posts:
+SELECT OwnerUserId,COUNT(1) FROM EMP_RECORDS WHERE UPPER(BODY) LIKE '%HADOOP%' OR UPPER(TITLE) LIKE '%HADOOP%' GROUP BY OWNERUSERID HAVING COUNT(1)>1;
