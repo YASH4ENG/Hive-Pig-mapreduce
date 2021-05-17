@@ -1,0 +1,46 @@
+NOTE:These all queries should be written in grunt shell of pig!!
+
+---------pig query to load hdfs data--------------------
+
+
+REGISTER /home/cloudera/piggybank-0.15.0.jar  ///*This is option,Because I am doing my Local Machine I ahev to run this for .CSVExcelStorage function)*///
+
+
+firstdata = LOAD '/user/cloudera/data/sd1.csv' USING org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE', 'UNIX', 'SKIP_INPUT_HEADER') as 
+(Id:int,PostTypeId:int,AcceptedAnswerId:int,ParentId:int,CreationDate:datetime,DeletionDate:datetime,Score:int,ViewCount:int,Body:chararray,OwnerUserId:int,OwnerDisplayName:chararray,LastEditorUserId:int,LastEditorDisplayName:chararray,LastEditDate:datetime,LastActivityDate:datetime,Title:chararray,Tags:chararray,AnswerCount:int,CommentCount:int,FavoriteCount:int,ClosedDate:datetime,CommunityOwnedDate:datetime);
+    
+seconddata = load '/user/cloudera/data/sd2.csv' using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE', 'UNIX', 'SKIP_INPUT_HEADER') as 
+(Id:int, PostTypeId:int, AcceptedAnswerId:int, ParentId:int, CreationDate:datetime, DeletionDate:datetime,Score:int,ViewCount:int,Body:chararray,OwnerUserId:int,OwnerDisplayName:chararray,LastEditorUserId:int,LastEditorDisplayName:chararray,LastEditDate:datetime,LastActivityDate:datetime,Title:chararray,Tags:chararray,AnswerCount:int,CommentCount:int,FavoriteCount:int,ClosedDate:datetime,CommunityOwnedDate:datetime);
+
+thirddata = load '/user/cloudera/data/sd3.csv' using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE', 'UNIX', 'SKIP_INPUT_HEADER') as 
+(Id:int, PostTypeId:int, AcceptedAnswerId:int, ParentId:int, CreationDate:datetime, DeletionDate:datetime,Score:int,ViewCount:int,Body:chararray,OwnerUserId:int,OwnerDisplayName:chararray,LastEditorUserId:int,LastEditorDisplayName:chararray,LastEditDate:datetime,LastActivityDate:datetime,Title:chararray,Tags:chararray,AnswerCount:int,CommentCount:int,FavoriteCount:int,ClosedDate:datetime,CommunityOwnedDate:datetime);
+
+fourthdata = load '/user/cloudera/data/sd4.csv' using org.apache.pig.piggybank.storage.CSVExcelStorage(',', 'YES_MULTILINE', 'UNIX', 'SKIP_INPUT_HEADER') as 
+(Id:int, PostTypeId:int, AcceptedAnswerId:int, ParentId:int, CreationDate:datetime, DeletionDate:datetime,Score:int,ViewCount:int,Body:chararray,OwnerUserId:int,OwnerDisplayName:chararray,LastEditorUserId:int,LastEditorDisplayName:chararray,LastEditDate:datetime,LastActivityDate:datetime,Title:chararray,Tags:chararray,AnswerCount:int,CommentCount:int,FavoriteCount:int,ClosedDate:datetime,CommunityOwnedDate:datetime);
+
+
+ 
+-----------Pig Query to combine the data of AlL Four CSV File into ONE-------------------------
+
+mergedata = UNION firstdata,seconddata,thirddata,fourthdata;
+
+
+----------clean the data using pig Query -------------------------
+
+///* We have to clean the data becuase 3 columns in Combined CSV file has (nextlines,comma,spaces) we have to remove this before uploading to hdfs So that we can directly 
+Load table values in hive table by hdfs path ///* 
+
+savedata = FOREACH mergedata generate Id,PostTypeId,AcceptedAnswerId,ParentId ,CreationDate,DeletionDate,Score,ViewCount,REPLACE(REPLACE(Body, '\n',''),',','') As body,
+OwnerUserId,OwnerDisplayName,LastEditorUserId,LastEditorDisplayName,LastEditDate,LastActivityDate,REPLACE(REPLACE(Title, '\n',''),',','') As title,
+REPLACE(REPLACE(Tags, '\n',''),',','') As tags,AnswerCount,CommentCount,FavoriteCount,ClosedDate,CommunityOwnedDate;
+
+--------------- store pig data in hdfs : Note : path should not exist-----------------
+
+STORE saveddata INTO '/user/cloudera/data/pigdata' USING PigStorage(',');
+
+
+-------- Pig hdfs data to loacl_data location----------------------
+
+//* This command should not be  typed in pig shell //*
+
+hadoop fs -cat /user/cloudera/data/pigdata/* > /home/cloudera/data/datadata.csv or .txt
